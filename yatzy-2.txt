@@ -1,0 +1,312 @@
+from random import randint
+from random import shuffle
+from collections import namedtuple
+
+player = namedtuple('player',['name','scoring_pad','dice'])
+NAME = 0
+SCORE = 1
+players = []
+score_pad = {"ones": 0, "twos": 0, "threes": 0, "fours": 0, "fives": 0, "sixes": 0, "pair": 0, "two_pairs": 0,
+             "three_of_a_kind": 0, "four_of_a_kind": 0, "small_straight": 0, "large_straight": 0, "full_house": 0,
+             "chance": 0, "yat_zy": 0}
+print("------------------Yatzy Game------------------")
+
+num_of_players = 0
+while True:
+    name = input("Enter the players name and enter 'start' to start the game ")
+    if name=='start':
+        break
+    else:
+        players.append(player(name, score_pad.copy(),[]))
+        num_of_players+=1
+    
+#shuffling the players
+shuffle(players)
+
+def update(func,name):
+    l=0
+    nscore=func()
+    for gamer in players:
+        gamer.scoring_pad[name]=nscore[l]
+        l+=1
+    print(players)
+
+def roll(dice: int):
+    for die in range(dice):
+        yield(randint(1, 6))
+
+def dices():
+    dice = 5
+    hold = []
+    board = list(roll(dice))
+    print("first roll", board)
+    print(" If you want to hold type yes or else type no", end = " ")
+    if input() == "yes":
+        hold_list=list(map(int, input('enter numbers to hold: ').split()))
+        for i in hold_list:
+            if i in board:
+                hold.append(i)
+                break
+        dice = 5 - len(hold)
+    if dice > 0:
+        board = list(roll(dice))
+        print("hold", hold, "Second roll", board)
+        print("If you want to hold type yes or else type no", end=" ")
+        if input() == "yes":
+            hold_list=list(map(int, input('enter numbers to hold: ').split()))
+            for i in hold_list:
+                if i in board:
+                    hold.append(i)
+                    break
+            dice = 5 - len(hold)
+        print("wants to unhold?yes/no", end=" ")
+        if input() == "yes":
+            print('enter the number on dice to unhold')
+            unhold = list(map(int, input().split()))
+            for i in unhold:
+                hold.remove(i)
+                dice = 5 - len(hold)
+    if dice > 0:
+        board = list(roll(dice))
+        print("hold", hold, "third roll", board)
+        for die in board:
+            hold.append(die)
+    print("final dices:",hold)
+    return hold
+
+
+def single_numbers(num,round_name,s_list):
+    for player in players:
+        print('\nThis round is for ',round_name, player[0])
+        s = dices()
+        score = s.count(num)
+        score=score*num
+        player.dice.clear()
+        player.dice.append(s)
+        s_list.append(score)
+        
+
+def ones():
+    s_list=[]
+    single_numbers(1,"ones",s_list)
+    return s_list
+update(ones,'ones')
+
+def twos():
+    s_list=[]
+    single_numbers(2,"twos",s_list)
+    return s_list
+update(twos,'twos')
+
+def threes():
+    s_list=[]
+    single_numbers(3,"threes",s_list)
+    return s_list
+update(threes,'threes')
+
+def fours():
+    s_list=[]
+    single_numbers(4,"fours",s_list)
+    return s_list
+update(fours,'fours')
+
+def fives():
+    s_list=[]
+    single_numbers(5,"fives",s_list)
+    return s_list
+update(fives,'fives')
+
+def sixes():
+    s_list=[]
+    single_numbers(6,"sixes",s_list)
+    return s_list
+update(sixes,'sixes')
+
+def pair():
+    s_list=[]
+    for player in players:
+        print('\nThis round is for pair', player[0])
+        score = 0
+        s = dices()
+        player.dice.clear()
+        player.dice.append(s)
+        st = set(s)
+        for k in st:
+            s.remove(k)
+        if s!= []:
+            score = 2*max(s)
+        s_list.append(score)
+    return s_list
+update(pair,'pair')
+
+def two_pairs():
+    s_list=[]
+    for player in players:
+        print("\nThis round is for two pairs",player[0])
+        hold=dices()
+        player.dice.clear()
+        player.dice.append(hold)
+        score = 0
+        print(player[NAME])
+        st = set(hold)
+        for k in st:
+            hold.remove(k)
+        if len(hold) == 2:
+            for v in st:
+                score += 2 * v
+        if len(hold) == 4:
+            st = set(hold)
+            if len(st) == 2:
+                for s in st:
+                    score += 2*s
+            if len(st) == 1:
+                for m in st:
+                    score = 4*m
+        s_list.append(score)
+    return s_list
+update(two_pairs,'two_pairs')
+
+def three_of_a_kind():
+    s_list=[]
+    for player in players:
+        print('\nThis round is for three of a kind',player[0])
+        s = dices()
+        player.dice.clear()
+        player.dice.append(s)
+        score = 0
+        st = set(s)
+        for j in st:
+            s.remove(j)
+        if len(s) != 0:
+            st = set(s)
+            for j in st:
+                s.remove(j)
+                if len(s) != 0:
+                    score = 3 * s[0]
+        s_list.append(score)
+    return s_list
+update(three_of_a_kind,'three_of_a_kind')
+
+def four_of_a_kind():
+    s_list=[]
+    for player in players:
+        score = 0
+        print('\nThis round is for four of a kind', player[0])
+        s = dices()
+        player.dice.clear()
+        player.dice.append(s)
+        st = set(s)
+        for k in st:
+            s.remove(k)
+        if len(s) != 0:
+            st = set(s)
+            for j in st:
+                s.remove(j)
+            if len(s) != 0:
+                st = set(s)
+                for k in st:
+                    s.remove(k)
+                if len(s) != 0:
+                    score = 4 * s[0]
+        s_list.append(score)
+    return s_list
+update(four_of_a_kind,'four_of_a_kind')
+
+def small_straight():
+    s_list=[]
+    for player in players:
+        print('\nThis round is for small straight', player[0])
+        score = 0
+        s = dices()
+        player.dice.clear()
+        player.dice.append(s)
+        s.sort()
+        if s == [1, 2, 3, 4, 5]:
+            score = 15
+        s_list.append(score)
+    return s_list
+update(small_straight,'small_straight')
+
+
+def large_straight():
+    s_list=[]
+    for player in players:
+        print('\nThis round is for large straight', player[0])
+        score = 0
+        s = dices()
+        player.dice.clear()
+        player.dice.append(s)
+        s.sort(reverse=True)
+        if s == [6, 5, 4, 3, 2]:
+            score = 20
+        s_list.append(score)
+    return s_list
+update(large_straight,'large_straight')
+
+
+def full_house():
+    s_list=[]
+    for player in players:
+        print('\nThis round is for full house', player[0])
+        score = 0
+        s = dices()
+        player.dice.clear()
+        player.dice.append(s)
+        diceout = s.copy()
+        st = set(s)
+        for k in st:
+            s.remove(k)
+            st = set(s)
+        if len(st) == 2:
+            for j in st:
+                s.remove(j)
+                if len(s) == 1:
+                    for k in diceout:
+                        score += k
+        s_list.append(score)
+    return s_list
+update(full_house,'full_house')
+        
+def chance():
+    s_list=[]
+    for player in players:
+        print('\nThis round is for chance', player[0])
+        s = dices()
+        player.dice.clear()
+        player.dice.append(s)
+        score = 0
+        for j in s:
+            score += j
+        s_list.append(score)
+    return s_list
+update(chance,'chance')
+
+def yat_zy():
+    s_list=[]
+    for player in players:
+        print('\nThis round is for yatzy', player[0])
+        score = 0
+        s = dices()
+        player.dice.clear()
+        player.dice.append(s)
+        for j in s:
+            if s.count(j) == 5:
+                score = 50
+        s_list.append(score)
+    return s_list
+update(yat_zy,'yat_zy')
+
+def print_scores():
+    print("\t\tFinal Scores\t\t")
+    player_name=list()
+    player_score=list()
+    for player in players:
+        player_name.append(player[NAME])
+        c=sum(player[SCORE].values())
+        player_score.append(c)
+    for i in range(len(players)):
+        a=player_score.index(max(player_score))
+        print(player_name[a],':','score',player_score[a])
+        player_name.remove(player_name[a])
+        player_score.remove(player_score[a]) 
+print_scores()
